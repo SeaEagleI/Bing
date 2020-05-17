@@ -35,11 +35,10 @@ suc_cp_lines = [rec_line for rec_line in LoadCheckpoint(cp_path) if rec_line[1]=
 cmm_lines = LoadComments(cmm_path)
 
 # Consistency Check
-if len(piclist)==len(suc_cp_lines):
-    print('CRT')
+if len(suc_cp_lines)==len(piclist):
+    print('CKPT==PICS')
 if len(suc_cp_lines)==len(cmm_lines):
-    print('CRT')
-print(len(piclist),len(suc_cp_lines),len(cmm_lines))
+    print('CKPT==CMM')
 
 # Generally, We have CKPT<PICS<CMM (Consider Exe Order)
 print('[CKPT]: {}'.format(len(suc_cp_lines)))
