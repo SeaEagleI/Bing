@@ -22,7 +22,7 @@ for rec_line in cp_lines:
     date,picName = rec_line[-2:]
     if date not in err_dates and picName in piclist:
         cp_txt_lines.append('\t'.join(rec_line))
-cp_txt = '\n'.join(cp_txt_lines)
+cp_txt = '\n'.join(cp_txt_lines+[''])
 open(cp_path,'wb').write(cp_txt.encode('utf-8'))
 new_cp_lines = LoadCheckpoint(cp_path)
 print('[Checkpoint]:\tCleared {} Err_Msgs.'.format(len(cp_lines)-len(new_cp_lines)))
