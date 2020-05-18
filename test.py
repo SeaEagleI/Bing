@@ -1,6 +1,7 @@
 import requests
 from lib import *
 from config import *
+import time
 
 def PrintList(_list,label):
     print('\n[{}]: {}'.format(label,len(_list)))
@@ -53,3 +54,5 @@ inc_cmm_lines = [lines for lines in cmm_lines if DateTrans(lines[0]) not in cp_d
 
 PrintList(inc_piclist,'INC_PICS')
 PrintList(inc_cmm_lines,'INC_CMM')
+
+time.sleep(10)
