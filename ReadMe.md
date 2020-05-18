@@ -4,6 +4,6 @@
 
 
 
-#### 效果图
+### 效果图
 
 <div align=center><img src="http://47.92.96.62/pics/bing-demo.png"></img></div>
