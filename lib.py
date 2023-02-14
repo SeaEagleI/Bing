@@ -7,6 +7,9 @@ import requests
 import os,re,time
 from config import *
 
+# crawler params
+list_page_url = "https://plmeizi.com/list/new/desc/classic.html?page={}"  # list page url format
+page_size = 30  # number of images in a list page
 time_out = 5
 deli = [r' ',r'<br/>',r'<br>']
 rest,date = [],[]
@@ -78,30 +81,63 @@ def WrtTxt(txt,d):
     open(cmm_path, 'wb').write(txt.encode('utf-8'))
     return "Success"
 
-def Crawl(n):
-    url = main_url+str(n)
+
+# Get BeautifulSoup from url
+def Soup(url):
+    r = requests.get(url, timeout=time_out)
+    assert r.status_code == 200, f"Failed to GetSize from {url}"
+    soup = BeautifulSoup(r.text, 'html.parser')
+    return soup
+
+
+# Get img_disp_urls from list page, And save results to CACHE $url_dict
+def GetListPage(page_id, url_dict):
+    page_url = list_page_url.format(page_id)
+    list_div = Soup(page_url)('div', attrs={'class': 'list'})[0]
+    for a in list_div("a"):
+        href = a["href"]
+        img_id = eval(href.split('/')[-1].split('-')[1])
+        url_dict[img_id] = href.replace("/show-", "/wallpaper-")
+    return url_dict
+
+def Crawl(n, lib_size, url_dict):
+    # Get image display url for image n
+    # url = main_url+str(n)  # legacy version
+    if n not in url_dict:  # if disp_url
+        page_id = ceil((lib_size - n + 1) / page_size)  # calculate list page id
+        url_dict = GetListPage(page_id, url_dict)  # refresh image display urls in list page to cache
+    url = url_dict[n]
     try:
         r = requests.get(url,timeout=5)
         r.encoding = 'utf-8'
     except:
-        return ["Failed"]
+        return ["Failed"], url_dict
     if r.status_code==200:
         html = r.text
     else:
-        return ["Failed"]
+        return ["Failed"], url_dict
     soup = BeautifulSoup(html,'html.parser')
-    h1 = soup.find_all('h1')[0]
-    rdate = h1.find_all('strong')[0].string
-    date = rdate[:4]+'-'+rdate[4:6]+'-'+rdate[6:]
-    span_str = str(soup.find_all('span',id="title")[0])
-    span = re.findall(r'<span id="title">(.*?)</span>',span_str)[0]
+    wrapper_div = soup("div", attrs={"class": "wrapper"})[0]
+    # h1 = soup.find_all('h1')[0]
+    # rdate = h1.find_all('strong')[0].string
+    # date = rdate[:4]+'-'+rdate[4:6]+'-'+rdate[6:]
+    date = wrapper_div("time")[0].string
+    rdate = date.replace("-", "")
+    title = wrapper_div("div", attrs={"class": "title"})[0].string
+    desc = wrapper_div("div", attrs={"class": "description"})[0].string
+    # span_str = str(soup.find_all('span',id="title")[0])
+    # span = re.findall(r'<span id="title">(.*?)</span>',span_str)[0]
+    span = f"{title}<br/>{desc}"
     titles = [date]+Sep(span,deli)
+    if len(titles) == 4:
+        for old, repl in {"\n": "", " +": " ", "^ | $": ""}.items():
+            titles[-1] = re.sub(old, repl, titles[-1])
     if len(titles)==3:
         titles += ['No Comments']
     if len(titles)!=4 or WrtTxt('\n'.join(titles),eval(rdate))=="Failed":
-        return ["Failed"]
-    pic_url = 'http:'+soup.find_all('a',id="picurl")[0]['href']
-    return SavePic(url,pic_url,Rename(titles[1]),eval(rdate),pic_folder)
+        return ["Failed"], url_dict
+    pic_url = wrapper_div("img")[0]["src"]
+    return SavePic(url,pic_url,Rename(titles[1]),eval(rdate),pic_folder), url_dict
 
 def Checkpoint(n,result):
     if result[0]=="Success":

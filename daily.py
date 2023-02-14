@@ -4,7 +4,7 @@ import time,requests
 from probar import Pro
 from lib import Restore,Checkpoint,Crawl
 
-url = 'http://bing.plmeizi.com/'
+url = 'http://plmeizi.com/'
 time_out = 15
 sleep_t = 3
 
@@ -17,7 +17,7 @@ def getSize():
         return
     soup = BeautifulSoup(html,'html.parser')
     a = soup('div',attrs={'class':'list'})[0]('a')[0]
-    size = eval(a['href'].split('/')[-1])
+    size = eval(a['href'].split('/')[-1].split('-')[1])
     return size
 
 def daily():
@@ -25,8 +25,9 @@ def daily():
     suc,num,rest = Restore(lib_size)
     start = time.perf_counter()
     last,old,last_sz = start,suc,0
+    url_dict = {}
     for i in rest:
-        result = Crawl(i)
+        result, url_dict = Crawl(i, lib_size, url_dict)
         Checkpoint(i,result)
         num += 1
         if result[0]=="Success":
