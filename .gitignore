@@ -1,0 +1,8 @@
+# directories
+.idea/
+__pycache__/
+
+# files
+.gitignore
+*.lnk
+*.cmd
